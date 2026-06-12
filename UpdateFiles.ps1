@@ -58,7 +58,8 @@ try {
         $jsonText = (Get-Content $cleanPath -Raw -ErrorAction Stop).Trim()
     } else {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        $jsonText = (Invoke-WebRequest -Uri $DefaultGistURL -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop).Content.Trim()
+        $uniqueUrl = $DefaultGistURL + "?t=" + [DateTime]::UtcNow.Ticks
+        $jsonText = (Invoke-WebRequest -Uri $uniqueUrl -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop).Content.Trim()
     }
     
     $json = $jsonText | ConvertFrom-Json -ErrorAction Stop
