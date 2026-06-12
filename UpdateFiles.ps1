@@ -138,8 +138,58 @@ Write-Host "Launching installer..." -ForegroundColor Yellow
 Write-Host "This application will now exit to allow the installer to overwrite files." -ForegroundColor Cyan
 Start-Sleep 2
 
-# Launch the installer in a separate process
-Start-Process -FilePath $runPath
+# Write a helper post-install script to update local version files to the remote version once the installer exits
+$postInstallScript = Join-Path $tempUpdateDir "post_install.ps1"
+$postInstallContent = @"
+`$ErrorActionPreference = "Stop"
+Start-Sleep -Seconds 2
+try {
+    `$proc = Start-Process -FilePath "$runPath" -PassThru
+    `$proc.WaitForExit()
+} catch {
+    exit 1
+}
+
+`$VersionPassphrase = "K1ngd0m&C0_M3mu_Aut0!2026#Rok"
+`$VersionSalt = [Text.Encoding]::UTF8.GetBytes("RokSalt2026!")
+
+function Write-VersionDll(`$dllFile, `$Version) {
+    try {
+        `$keyGen = New-Object Security.Cryptography.Rfc2898DeriveBytes(`$VersionPassphrase, `$VersionSalt, 10000, [Security.Cryptography.HashAlgorithmName]::SHA256)
+        `$aes = [Security.Cryptography.Aes]::Create()
+        `$aes.Key = `$keyGen.GetBytes(32)
+        `$aes.GenerateIV()
+        `$encryptor = `$aes.CreateEncryptor()
+        `$plainBytes = [Text.Encoding]::UTF8.GetBytes(`$Version)
+        `$cipherBytes = `$encryptor.TransformFinalBlock(`$plainBytes, 0, `$plainBytes.Length)
+        `$dllBytes = `$aes.IV + `$cipherBytes
+        [IO.File]::WriteAllBytes(`$dllFile, `$dllBytes)
+        return `$true
+    } catch { return `$false }
+}
+
+# Write version.txt
+"$cleanRemote" | Out-File "$localTxt" -Encoding UTF8 -NoNewline
+
+# Write version.dll
+Write-VersionDll "$localDll" "$cleanRemote"
+
+# Synchronize with AppData Update Directory
+`$UpdateDir = "C:\Users\MaleK\AppData\Local\KINGDOM-CO_UPDATE"
+if (-not (Test-Path `$UpdateDir)) { New-Item -ItemType Directory -Path `$UpdateDir -Force | Out-Null }
+`$appDataDll = Join-Path `$UpdateDir "KingdomCo.Engine.dll"
+`$appDataVersion = Join-Path `$UpdateDir "version.dll"
+
+if (Test-Path "$scriptDir\KingdomCo.Engine.dll") {
+    Copy-Item "$scriptDir\KingdomCo.Engine.dll" `$appDataDll -Force -ErrorAction SilentlyContinue
+}
+Copy-Item "$localDll" `$appDataVersion -Force -ErrorAction SilentlyContinue
+"@
+
+$postInstallContent | Out-File $postInstallScript -Encoding UTF8
+
+# Start the post-install helper script in a hidden PowerShell background process
+Start-Process -FilePath "powershell.exe" -ArgumentList "-WindowStyle Hidden -ExecutionPolicy Bypass -File `"$postInstallScript`""
 
 # Exit with code 2 to tell Start.bat to terminate
 exit 2
