@@ -127,3 +127,29 @@ Write-Host "    DONE! Version $newVer is now live." -Fore Green
 Write-Host "    Users will auto-update on next launch." -Fore Green
 Write-Host "  ============================================" -Fore Green
 Write-Host ""
+
+# Update public gist with new version info
+Write-Host "  Updating version gist..." -Fore Yellow
+$gistId = "ba3b32f309441438edc7ae6d91a60edf"
+$downloadUrl = "https://github.com/$repo/releases/download/$newVer/$fileName"
+$versionJson = @{
+    version = $newVer
+    download_url = $downloadUrl
+    changelog = "KINGDOM CO Installer RoK $newVer"
+} | ConvertTo-Json
+
+$gistBody = @{
+    files = @{
+        "version.json" = @{
+            content = $versionJson
+        }
+    }
+} | ConvertTo-Json -Depth 3
+
+try {
+    $null = Invoke-RestMethod -Uri "https://api.github.com/gists/$gistId" -Method Patch -Body $gistBody -ContentType "application/json" -Headers $headers
+    Write-Host "  Gist updated! Auto-update enabled for all users." -Fore Green
+} catch {
+    Write-Host "  Gist update failed: $($_.Exception.Message)" -Fore Yellow
+    Write-Host "  Users may need to download manually." -Fore Yellow
+}
