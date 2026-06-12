@@ -93,6 +93,21 @@ if (-not $needsUpdate) {
 
 Write-Host " UPDATE AVAILABLE: $localVersion -> $remoteVersion" -ForegroundColor Yellow
 Write-Host ""
+
+$response = ""
+while ($response -notmatch '^[yn]$') {
+    $response = Read-Host " [?] هل تريد تنزيل وتثبيت التحديث الجديد؟ Do you want to update? (Y/N)"
+    $response = $response.Trim().ToLower()
+}
+
+if ($response -eq 'n') {
+    Write-Host ""
+    Write-Host " Skipping update. Starting application..." -ForegroundColor Yellow
+    Start-Sleep 1
+    exit 0
+}
+
+Write-Host ""
 Write-Host "============================================" -ForegroundColor Yellow
 Write-Host "Downloading Installer v$remoteVersion..." -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Yellow
