@@ -1,0 +1,13 @@
+accounts.txt
+*.log
+*_VM*.txt
+.gemini/
+temp_path.txt
+install_backup/
+appdata_backup/
+mock_remote/
+decrypt.ps1
+decrypt_first.ps1
+print_pairs.ps1
+run_extract.ps1
+KingROK_extract.ps1
