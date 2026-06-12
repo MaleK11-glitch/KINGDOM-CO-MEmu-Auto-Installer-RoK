@@ -96,7 +96,7 @@ Write-Host ""
 
 $response = ""
 while ($response -notmatch '^[yn]$') {
-    $response = Read-Host " [?] هل تريد تنزيل وتثبيت التحديث الجديد؟ Do you want to update? (Y/N)"
+    $response = Read-Host " [?] A new update is available. Do you want to download and install it? (Y/N)"
     $response = $response.Trim().ToLower()
 }
 
