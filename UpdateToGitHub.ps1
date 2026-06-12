@@ -1,4 +1,4 @@
-﻿# ============================================
+# ============================================
 # KINGDOM CO - Upload Update to GitHub
 # ============================================
 
@@ -131,7 +131,7 @@ Write-Host ""
 # Update public gist with new version info
 Write-Host "  Updating version gist..." -Fore Yellow
 $gistId = "ba3b32f309441438edc7ae6d91a60edf"
-$downloadUrl = "https://github.com/$repo/releases/download/$newVer/$fileName"
+$downloadUrl = $asset.browser_download_url
 $versionJson = @{
     version = $newVer
     download_url = $downloadUrl
