@@ -6,9 +6,20 @@ $repo = "MaleK11-glitch/KINGDOM-CO-MEmu-Auto-Installer-RoK"
 $tokenFile = Join-Path $env:TEMP "kc_github_token.txt"
 
 # Get token
+$token = $null
 if (Test-Path $tokenFile) {
-    $token = Get-Content $tokenFile -Raw
-} else {
+    $savedToken = Get-Content $tokenFile -Raw
+    # Verify token works
+    $testHeaders = @{ Authorization = "token $savedToken"; Accept = "application/vnd.github+json" }
+    try {
+        Invoke-RestMethod -Uri "https://api.github.com/user" -Headers $testHeaders -ErrorAction Stop | Out-Null
+        $token = $savedToken
+    } catch {
+        Remove-Item $tokenFile -Force -ErrorAction SilentlyContinue
+    }
+}
+
+if (-not $token) {
     Write-Host ""
     Write-Host "  ============================================" -Fore Cyan
     Write-Host "    KINGDOM CO - Upload Update to GitHub" -Fore Cyan
@@ -35,12 +46,15 @@ try {
 
 # Ask for new version
 Write-Host ""
-Write-Host "  Available versions:" -Fore Cyan
-Write-Host "    v2.1 (patch)" -Fore Gray
-Write-Host "    v3.0 (major)" -Fore Gray
-Write-Host "    (or type custom version)" -Fore Gray
+Write-Host "  Current version: $currentVer" -Fore Cyan
+Write-Host "  Enter new version (e.g. v2.1, v3.0):" -Fore Gray
 Write-Host ""
-$newVer = Read-Host "  Enter new version (current: $currentVer)"
+$newVer = Read-Host "  New version"
+
+if ([string]::IsNullOrWhiteSpace($newVer)) {
+    Write-Host "  No version entered. Cancelled." -Fore Red
+    exit
+}
 
 if (-not $newVer.StartsWith("v")) { $newVer = "v$newVer" }
 
