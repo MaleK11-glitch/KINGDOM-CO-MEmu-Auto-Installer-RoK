@@ -7,6 +7,7 @@ echo    KINGDOM BOTS ^& CO - Checking for updates...
 echo  ============================================
 echo.
 powershell -ExecutionPolicy Bypass -NoProfile -File "%~dp0UpdateFiles.ps1"
+if %ERRORLEVEL% equ 2 exit /b 0
 echo.
 echo  Starting KINGDOM ^& CO...
 echo.
